@@ -1,0 +1,134 @@
+/* Game container */
+.game-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #000;
+    overflow: hidden;
+  }
+  
+  /* Game header */
+  .game-header {
+    width: 100%;
+    padding: 15px;
+    background-color: #000;
+    color: white;
+    text-align: center;
+  }
+  
+  .game-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  
+  .score {
+    font-size: 18px;
+  }
+  
+  /* Game area */
+  .game-area {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    height: 80%;
+    background: linear-gradient(to right, #8A2BE2, #4169E1);
+    overflow: hidden;
+  }
+  
+  /* Columns */
+  .columns {
+    display: flex;
+    height: 100%;
+  }
+  
+  .column {
+    flex: 1;
+    height: 100%;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Tiles */
+  .tile {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    background-color: #00BFFF;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    transition: opacity 0.1s ease;
+  }
+  
+  .tile.hit {
+    opacity: 0.7;
+    box-shadow: none;
+  }
+  
+  .hit-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  
+  /* Overlay */
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .title, .game-over {
+    font-size: 28px;
+    color: white;
+    font-weight: bold;
+    margin-bottom: 24px;
+  }
+  
+  .final-score {
+    font-size: 22px;
+    color: white;
+    margin-bottom: 24px;
+  }
+  
+  .play-button {
+    padding: 12px 24px;
+    background-color: #0066CC;
+    color: white;
+    font-size: 18px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+  }
+  
+  .instructions {
+    color: white;
+    margin-top: 24px;
+  }
+  
+  /* Make sure the game is responsive */
+  @media (max-height: 600px) {
+    .game-header h1 {
+      font-size: 20px;
+    }
+    .score {
+      font-size: 16px;
+    }
+  }
+  

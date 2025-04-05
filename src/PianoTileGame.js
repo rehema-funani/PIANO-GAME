@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./PianoTileGame.css"; // We'll create this CSS file next
-
+import "./PianoTileGame.css"; // Using your existing CSS file
 
 const PianoTileGame = () => {
   const [tiles, setTiles] = useState([]);
   const [score, setScore] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const gameAreaRef = useRef(null);
+  const audioRef = useRef(null);
 
   // Define the columns for the tiles
   const columns = [0, 1, 2, 3];
@@ -20,6 +21,21 @@ const PianoTileGame = () => {
     3: "#9400D3"  // Purple
   };
   
+  // Initialize audio when component mounts
+  useEffect(() => {
+    // Use the Jingle Bells audio file from public folder
+    audioRef.current = new Audio("/public/audio/Jingle Bells 3.mp3");
+    audioRef.current.loop = true;
+    
+    // Clean up audio on unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, []);
+  
   // Start the game
   const startGame = () => {
     setIsPlaying(true);
@@ -27,6 +43,39 @@ const PianoTileGame = () => {
     setScore(0);
     setTiles([]);
     addTile(); // Add initial tile
+    
+    // Start playing background music
+    if (audioRef.current && !isMuted) {
+      audioRef.current.play().catch(error => {
+        console.error("Audio playback failed:", error);
+      });
+    }
+  };
+
+  // Stop the game and music
+  const endGame = () => {
+    setIsPlaying(false);
+    setGameOver(true);
+    
+    // Stop music when game ends
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  };
+
+  // Toggle mute/unmute background music
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (audioRef.current) {
+      if (!isMuted) {
+        audioRef.current.pause();
+      } else if (isPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error("Audio playback failed:", error);
+        });
+      }
+    }
   };
 
   // Add a new tile in a random column
@@ -85,8 +134,7 @@ const PianoTileGame = () => {
         // Check for missed tiles to end game
         const missedTile = updatedTiles.find(tile => tile.missed);
         if (missedTile) {
-          setGameOver(true);
-          setIsPlaying(false);
+          endGame();
         }
         
         // Remove tiles that are hit or off screen
@@ -111,12 +159,39 @@ const PianoTileGame = () => {
     return () => clearInterval(newTileInterval);
   }, [isPlaying, gameOver]);
 
+  // Update music state when mute or playing state changes
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying && !isMuted) {
+        audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying, isMuted]);
+
   return (
     <div className="game-container">
       {/* Game header */}
       <div className="game-header">
         <h1>Piano Fire</h1>
         <div className="score">Score: {score}</div>
+        <button 
+          className="mute-button" 
+          onClick={toggleMute}
+          style={{
+            background: "none",
+            border: "none",
+            color: "white",
+            fontSize: "16px",
+            cursor: "pointer",
+            position: "absolute",
+            top: "15px",
+            right: "15px"
+          }}
+        >
+          {isMuted ? "🔇" : "🔊"}
+        </button>
       </div>
       
       {/* Game area */}

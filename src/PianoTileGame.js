@@ -7,6 +7,7 @@ const PianoTileGame = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [audioLoaded, setAudioLoaded] = useState(false);
   const gameAreaRef = useRef(null);
   const audioRef = useRef(null);
 
@@ -23,15 +24,26 @@ const PianoTileGame = () => {
   
   // Initialize audio when component mounts
   useEffect(() => {
-    // Use the Jingle Bells audio file from public folder
-    audioRef.current = new Audio("/public/audio/Jingle Bells 3.mp3");
+    // Create audio element with the correct path
+    audioRef.current = new Audio("/audio/Jingle Bells 3.mp3");
+    audioRef.current.preload = "auto";
     audioRef.current.loop = true;
+    
+    // Add event listeners
+    audioRef.current.addEventListener('canplaythrough', () => {
+      console.log("Audio loaded successfully");
+      setAudioLoaded(true);
+    });
+    
+    audioRef.current.addEventListener('error', (e) => {
+      console.error("Failed to load audio:", e);
+    });
     
     // Clean up audio on unmount
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+        audioRef.current.src = "";
       }
     };
   }, []);
@@ -45,10 +57,27 @@ const PianoTileGame = () => {
     addTile(); // Add initial tile
     
     // Start playing background music
+    playAudio();
+  };
+
+  // Play audio with error handling
+  const playAudio = () => {
     if (audioRef.current && !isMuted) {
-      audioRef.current.play().catch(error => {
-        console.error("Audio playback failed:", error);
-      });
+      // Reset the audio position
+      audioRef.current.currentTime = 0;
+      
+      // Play with error handling
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log("Audio playing successfully");
+          })
+          .catch(error => {
+            console.error("Audio playback failed:", error);
+          });
+      }
     }
   };
 
@@ -60,20 +89,19 @@ const PianoTileGame = () => {
     // Stop music when game ends
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.currentTime = 0;
     }
   };
 
   // Toggle mute/unmute background music
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    const newMuteState = !isMuted;
+    setIsMuted(newMuteState);
+    
     if (audioRef.current) {
-      if (!isMuted) {
+      if (newMuteState) {
         audioRef.current.pause();
       } else if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.error("Audio playback failed:", error);
-        });
+        playAudio();
       }
     }
   };
@@ -99,6 +127,11 @@ const PianoTileGame = () => {
   // Handle tile touch/click
   const handleTileClick = (tileId) => {
     if (!isPlaying || gameOver) return;
+    
+    // If first click, try to play audio (browser autoplay policy workaround)
+    if (audioRef.current && !audioRef.current.paused === false && !isMuted) {
+      playAudio();
+    }
     
     setTiles(prevTiles => 
       prevTiles.map(tile => 
@@ -159,17 +192,6 @@ const PianoTileGame = () => {
     return () => clearInterval(newTileInterval);
   }, [isPlaying, gameOver]);
 
-  // Update music state when mute or playing state changes
-  useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying && !isMuted) {
-        audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [isPlaying, isMuted]);
-
   return (
     <div className="game-container">
       {/* Game header */}
@@ -198,6 +220,12 @@ const PianoTileGame = () => {
       <div 
         ref={gameAreaRef}
         className="game-area"
+        onClick={() => {
+          if (!isPlaying && audioRef.current && !isMuted) {
+            // Try to play audio on any click to solve autoplay restrictions
+            playAudio();
+          }
+        }}
       >
         {/* Grid columns */}
         <div className="columns">
@@ -245,7 +273,11 @@ const PianoTileGame = () => {
             <div className="title">Piano Fire</div>
             <button
               className="play-button"
-              onClick={startGame}
+              onClick={() => {
+                startGame();
+                // Try to play audio directly on button click (user interaction)
+                playAudio();
+              }}
             >
               Play Now
             </button>
